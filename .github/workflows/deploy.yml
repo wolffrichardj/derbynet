@@ -1,0 +1,49 @@
+name: Build & Deploy DerbyNet to DreamHost
+
+on:
+  push:
+    branches:
+      - main  # or your default branch
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Apache Ant
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ant
+
+      - name: Generate build files
+        run: ant generated
+
+      - name: Build browser timer interface
+        run: ant timer-in-browser
+        continue-on-error: true  # Optional, won't fail if timer build has issues
+
+      - name: Prepare deployment files
+        run: |
+          # Create a staging directory with website contents
+          # Copy website files, excluding local/ directory (configuration)
+          mkdir -p deploy
+          rsync -av --exclude='local' --exclude='.git' website/ deploy/
+
+      - name: SFTP Deploy to DreamHost
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          server: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          local_path: './deploy/*'
+          remote_path: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
+          sftpArgs: '-o ConnectTimeout=5'
