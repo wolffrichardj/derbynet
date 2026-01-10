@@ -1,40 +1,56 @@
-# Please visit us at [https://derbynet.org](https://derbynet.org).
+# DerbyNet
 
 ![icon](https://raw.githubusercontent.com/jeffpiazza/derbynet/master/website/img/derbynet-300.png)
 
-# Developing locally
+**DerbyNet** is a free, open-source, web-based race management system for Pinewood Derby-style racing events. It provides comprehensive tools for managing racers, coordinating races, capturing timer data, displaying results, and presenting awards.
 
-To quickly get started on local development, the existing Docker image can be
-used to provide the web server and PHP engine, even if you don't have these
-installed natively on your machine.
+## Overview
 
-1. Install [Apache Ant](https://ant.apache.org/). 
-   1. You can [install WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and run:
+DerbyNet is a multi-screen race management solution that enables:
+- **Racer Management**: Check-in, roster import/export, photo capture
+- **Race Coordination**: Heat scheduling, lane assignments, racing groups
+- **Timer Integration**: Support for multiple hardware timer devices via serial/USB
+- **Results Display**: Real-time race results, standings, and history
+- **Awards Management**: Award creation, online balloting, and presentation displays
+- **Kiosk Mode**: Dedicated displays for check-in, "now racing", standings, and more
 
-      ```bash
-      sudo apt-get update
-      sudo apt-get install ant
-      ```
+## Key Features
 
-2. Execute `ant generated` from the root of the cloned repository.  (This build
-target includes a step to generate PDF files from their ODF source files.  This
-step will be silently skipped if the LibreOffice/OpenOffice `soffice`
-application is not available.)
+- **Web-Based Interface**: Accessible from any device with a web browser
+- **Multi-Timer Support**: Java-based timer interface (derby-timer.jar) and browser-based timer
+- **Database Flexibility**: Supports SQLite (default), MySQL, and ODBC (for GPRM compatibility)
+- **Multi-Screen Support**: Coordinate displays for different purposes (racing, standings, check-in)
+- **Photo Integration**: Capture and display racer photos
+- **Export/Import**: JSON export, roster import, snapshot/restore functionality
 
-3. If desired, do one or both of the following.  (If you do neither, you won't
-be able to connect to a hardware timer.)
+## Documentation
 
-   1. Execute `ant timer-in-brower` to build the in-browser timer interface.
-   2. Execute `ant timer-jar` to build the derby-timer.jar timer interface.
+**For Users:**
+- Installation and user guides: See `docs/` directory (PDF files generated from ODF sources)
+- Visit [https://derbynet.org](https://derbynet.org) for installation packages
 
-4. Instantiate the docker container, but use your local sources rather than
-those deployed in the container.  _**PATH_TO_YOUR_DATA**_ is a local directory
-where you'd like databases, photos, and other data files to be stored.
-_**PATH_TO_YOUR_REPOSITORY**_ is the path to your local cloned repository.
+**For Developers:**
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and component overview
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Development setup and build instructions
+- **[agents.md](agents.md)** - Guidance for AI agents working with this codebase
 
-   ```powershell
-   docker run --detach -p 80:80 -p 443:443 \
-     --volume [** PATH TO YOUR DATA **]\lib\:/var/lib/derbynet \
-     --mount type=bind,src=[** PATH TO YOUR REPOSITORY **]\website\,target=/var/www/html,readonly \
-     jeffpiazza/derbynet_server   
-   ```
+## Quick Start
+
+### For Users
+
+Visit [https://derbynet.org](https://derbynet.org) for installation packages and user guides.
+
+### For Developers
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development setup instructions.
+
+Quick local development setup:
+
+1. Install [Apache Ant](https://ant.apache.org/)
+2. Run `ant generated` to build generated files
+3. Build timer components: `ant timer-in-browser` and/or `ant timer-jar`
+4. Use Docker for web server/PHP: See [DEVELOPMENT.md](DEVELOPMENT.md) for details
+
+## License
+
+MIT License - see [MIT-LICENSE.txt](MIT-LICENSE.txt)
