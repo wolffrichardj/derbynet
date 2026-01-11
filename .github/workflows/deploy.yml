@@ -7,6 +7,11 @@ on:
       - feature/auto-deploy  # Add this temporarily for testing
   workflow_dispatch:  # Allows manual triggering of the workflow
 
+# Cancel in-progress deployments when a new commit is pushed
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
