@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DEPLOY_PATH: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
+      # Set your public URL for mobile check-in QR codes (e.g., https://yourdomain.com/derbynet)
+      DERBYNET_URL: "https://richardwolff.me/derbynet"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,9 +73,13 @@ jobs:
             # 777 allows web server (different user) to write database files
             chmod -R 777 local
             
+            # Set custom URL for mobile check-in QR codes
+            echo "${{ env.DERBYNET_URL }}" > local/config-url
+            
             # Create photo directories if they don't exist
             mkdir -p photos/head
             mkdir -p photos/car
+            mkdir -p photos/videos
             
             # Set permissions recursively for photo directories (web server needs write access)
             # DerbyNet creates subdirectories for different photo renders (e.g., 200x200, cropped, etc.)

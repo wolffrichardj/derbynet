@@ -32,12 +32,69 @@ After deploying DerbyNet to your Dreamhost server, navigate to your site (e.g., 
 
 ### Photo Directories
 
-During setup, DerbyNet will prompt for photo directory paths. Use relative paths:
+During setup, DerbyNet will prompt for photo directory paths. **Important:** The fields may show errors initially - this is expected.
 
-- **Racer photos**: `photos/head`
-- **Car photos**: `photos/car`
+**Enter these relative paths:**
 
-These directories are automatically created with proper permissions by the deployment workflow.
+1. **Directory for racer photos:**
+   ```
+   photos/head
+   ```
+
+2. **Directory for car photos:**
+   ```
+   photos/car
+   ```
+
+3. **Directory for videos** (if enabled):
+   ```
+   photos/videos
+   ```
+
+**Note:** You may see red warning messages saying "Directory does not exist or is not readable" - this is normal during initial setup. The directories exist and have proper permissions (set by deployment), but DerbyNet's validation may not recognize them until after you submit the form.
+
+**After submitting:**
+- The directories will be recognized
+- DerbyNet will create subdirectories as needed (e.g., `200x200/`, `cropped/`)
+- Photo uploads will work correctly
+
+These directories are automatically created with proper permissions (`777`) by the deployment workflow.
+
+### Custom Domain for Mobile Check-In
+
+By default, DerbyNet uses the server's IP address for mobile check-in QR codes. To use your domain name instead:
+
+**Automated (Recommended):**
+
+The deployment workflow automatically creates this configuration. Simply update the `DERBYNET_URL` in `.github/workflows/deploy.yml`:
+
+```yaml
+env:
+  DEPLOY_PATH: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
+  DERBYNET_URL: "https://yourdomain.com/derbynet"  # Change this to your domain
+```
+
+The next deployment will automatically create/update the `local/config-url` file.
+
+**Manual Setup:**
+
+If you need to set this without redeploying:
+
+1. **SSH into your Dreamhost server:**
+   ```bash
+   ssh username@your-server.dreamhost.com
+   cd /path/to/derbynet/local
+   ```
+
+2. **Create a `config-url` file:**
+   ```bash
+   echo "https://yourdomain.com/derbynet" > config-url
+   ```
+
+**After configuration:**
+- Mobile check-in QR codes will use your domain name
+- The URL will be `https://yourdomain.com/derbynet/mcheckin.php`
+- This persists across deployments (the `local/` directory is excluded from deployment, but the config-url file is recreated each time)
 
 ## Advanced Settings
 
