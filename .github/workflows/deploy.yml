@@ -20,10 +20,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Apache Ant
+      - name: Install Apache Ant and LibreOffice
         run: |
           sudo apt-get update
-          sudo apt-get install -y ant
+          sudo apt-get install -y ant libreoffice
 
       - name: Generate build files
         run: ant generated
