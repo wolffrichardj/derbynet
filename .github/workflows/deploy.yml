@@ -68,7 +68,8 @@ jobs:
             
             # Create local directory for SQLite database if it doesn't exist
             mkdir -p local
-            chmod -R 755 local
+            # 777 allows web server (different user) to write database files
+            chmod -R 777 local
             
             # Create photo directories if they don't exist
             mkdir -p photos/head
@@ -76,7 +77,8 @@ jobs:
             
             # Set permissions recursively for photo directories (web server needs write access)
             # DerbyNet creates subdirectories for different photo renders (e.g., 200x200, cropped, etc.)
-            chmod -R 755 photos
+            # 777 allows web server (different user) to write photo files
+            chmod -R 777 photos
             
             echo "Permissions set successfully"
           EOF

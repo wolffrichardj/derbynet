@@ -27,6 +27,7 @@ DerbyNet is a multi-screen race management solution that enables:
 
 **For Users:**
 - Installation and user guides: See `docs/` directory (PDF files generated from ODF sources)
+- **[DREAMHOST.md](DREAMHOST.md)** - Dreamhost-specific setup and configuration
 - Visit [https://derbynet.org](https://derbynet.org) for installation packages
 
 **For Developers:**
