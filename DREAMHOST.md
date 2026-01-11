@@ -96,6 +96,14 @@ If you need to set this without redeploying:
 - The URL will be `https://yourdomain.com/derbynet/mcheckin.php`
 - This persists across deployments (the `local/` directory is excluded from deployment, but the config-url file is recreated each time)
 
+## Security & Access Control
+
+**Initial setup:** No login required - DerbyNet automatically grants setup permissions when no database exists.
+
+**After setup:** Authentication is enforced with role-based permissions.
+
+For detailed information on user roles, permissions, and security configuration, see the DerbyNet documentation in the `docs/` directory.
+
 ## Advanced Settings
 
 Some DerbyNet features require access to advanced settings during setup:
