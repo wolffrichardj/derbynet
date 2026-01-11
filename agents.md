@@ -176,6 +176,39 @@ DerbyNet is a web-based race management system for Pinewood Derby events. It con
 - Timer build fails: Check Java JDK installation
 - Docs not generated: LibreOffice not required, silently skipped
 
+## Collaboration Principles
+
+When working with this codebase, follow these principles:
+
+**Documentation Philosophy:**
+- **Be terse** - Documentation should highlight goals and key concepts, not duplicate code
+- **Reference the source** - Point readers to the actual implementation files for details
+- **Avoid redundancy** - Don't maintain the same information in multiple places
+
+**Security Approach:**
+- **Trust platform features** - Rely on built-in security (e.g., GitHub Actions secret masking)
+- **Avoid security theater** - Don't hide errors in the name of security if it hurts debuggability
+- **Maintain visibility** - Errors should be visible for troubleshooting
+
+**Code Quality:**
+- **Single source of truth** - Use environment variables and constants to avoid duplication
+- **Simplify when possible** - Remove unnecessary complexity (e.g., prefer native tools over external dependencies)
+- **Supportability first** - Prioritize maintainability and debuggability
+
+## Deployment
+
+**Dreamhost Deployment:**
+- Workflow: `.github/workflows/deploy.yml`
+- Automated deployment via GitHub Actions on push to `main`
+- Handles build, SFTP upload, and file permissions
+- See `README.md` section "Deployment to Dreamhost" for setup
+
+**Key Deployment Details:**
+- `local/` directory excluded from deployment (preserves production database)
+- Permissions set automatically for SQLite database and photo directories
+- Supports custom database filenames
+- Uses native SSH for post-deployment configuration
+
 ## Quick Reference
 
 **Find AJAX handler:** `website/ajax/action.{action-name}.inc`
@@ -187,4 +220,6 @@ DerbyNet is a web-based race management system for Pinewood Derby events. It con
 **For detailed information, refer to:**
 - `ARCHITECTURE.md` - System design and components
 - `DEVELOPMENT.md` - Development workflow and build process
+- `README.md` - Project overview, quick start, and deployment
 - `docs/` directory - User documentation (PDF files)
+

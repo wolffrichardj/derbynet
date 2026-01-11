@@ -10,6 +10,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_PATH: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,5 +48,41 @@ jobs:
           username: ${{ secrets.SFTP_USERNAME }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
           local_path: './deploy/*'
-          remote_path: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
+          remote_path: ${{ env.DEPLOY_PATH }}
           sftpArgs: '-o ConnectTimeout=5'
+
+
+      - name: Set File Permissions for SQLite and Photos
+        run: |
+          # Set up SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Run SSH command to set permissions
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ secrets.SFTP_USERNAME }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Create local directory for SQLite database if it doesn't exist
+            mkdir -p local
+            chmod -R 755 local
+            
+            # Create photo directories if they don't exist
+            mkdir -p photos/head
+            mkdir -p photos/car
+            
+            # Set permissions recursively for photo directories (web server needs write access)
+            # DerbyNet creates subdirectories for different photo renders (e.g., 200x200, cropped, etc.)
+            chmod -R 755 photos
+            
+            echo "Permissions set successfully"
+          EOF
+          
+          # Clean up SSH key
+          rm -f ~/.ssh/deploy_key
+
+
+

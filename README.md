@@ -143,9 +143,24 @@ cat ~/.ssh/id_ed25519_dreamhost | pbcopy
    - `SFTP_USERNAME`: Your Dreamhost username
    - `SFTP_DESTINATION_PATH`: The destination path for files (e.g., `/home/username/derbynet.org`)
 
-### 5. Deploy via GitHub Actions
+### 5. Server Configuration for DerbyNet
 
-Once the secrets are configured, your GitHub Actions workflow will automatically deploy to Dreamhost on push to the main branch. Check your `.github/workflows/` directory for the deployment workflow configuration.
+DerbyNet requires write access for:
+- **SQLite database** - `local/` directory (supports custom filenames)
+- **Photo uploads** - `photos/` directory with subdirectories for racer/car photos
+
+The deployment workflow (`.github/workflows/deploy.yml`) automatically creates these directories and sets proper permissions after each deployment.
+
+**Note:** The `local/` directory is excluded from deployment to preserve your production database.
+
+### 6. Deploy via GitHub Actions
+
+Once the secrets are configured, your GitHub Actions workflow will automatically:
+1. Build the DerbyNet application
+2. Deploy files to Dreamhost via SFTP
+3. Set up proper file permissions for SQLite and photos
+
+Push to the `main` branch to trigger deployment, or use the "Actions" tab in GitHub to manually trigger the workflow.
 
 ## License
 
