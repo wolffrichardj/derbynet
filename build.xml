@@ -256,9 +256,11 @@
     </copy>
   </target>
 
-  <target name="quickref" depends="docs-dist">
+  <target name="quickref-check">
       <available property="quickref.exists" file="docs/dist/Quick Reference.pdf"/>
-      <copy file="docs/dist/Quick Reference.pdf" tofile="website/quickref.pdf" overwrite="true" failonerror="false" if="quickref.exists"/>
+  </target>
+  <target name="quickref" depends="docs-dist,quickref-check" if="quickref.exists">
+      <copy file="docs/dist/Quick Reference.pdf" tofile="website/quickref.pdf" overwrite="true"/>
   </target>
 
   <target name="timer-jar" depends="generated"
