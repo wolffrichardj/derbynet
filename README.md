@@ -52,116 +52,11 @@ Quick local development setup:
 3. Build timer components: `ant timer-in-browser` and/or `ant timer-jar`
 4. Use Docker for web server/PHP: See [DEVELOPMENT.md](DEVELOPMENT.md) for details
 
-## Deployment to Dreamhost
+## Deployment
 
-### Prerequisites
+This repository includes a GitHub Actions workflow for deploying to Dreamhost via SFTP.
 
-- A Dreamhost hosting account with SSH access
-- GitHub repository with Actions enabled
-- Local machine with SSH tools installed
-
-### 1. Generate & Add SSH Key
-
-**Check if you already have an SSH key:**
-```bash
-ls -la ~/.ssh/id_ed25519*
-```
-
-If you already have a key and want to keep it, either:
-- Use that existing key, or
-- Generate a new key with a different filename (e.g., `~/.ssh/id_ed25519_dreamhost`)
-
-**Generate a new SSH key:**
-```bash
-# Default location (will prompt to overwrite if exists)
-ssh-keygen -t ed25519 -C "your_email@example.com"
-
-# Or specify a custom filename to avoid overwriting
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_dreamhost -C "your_email@example.com"
-```
-
-**Note:** If using a custom filename, you'll need to specify it with `-i` when using SSH:
-```bash
-ssh -i ~/.ssh/id_ed25519_dreamhost user@server
-```
-
-### 2. Add Public Key to Dreamhost Server
-
-On your Dreamhost server, add the public key to authorized keys:
-
-```bash
-# SSH into your Dreamhost server
-ssh username@your-server.dreamhost.com
-
-# Create .ssh directory if it doesn't exist
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-
-# Add your public key (paste the contents of id_ed25519.pub)
-echo "ssh-ed25519 AAAA... your_email@example.com" >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-```
-
-### 3. Test SSH Connection
-
-After adding the public key to the server, test the connection:
-
-```bash
-# Using default key
-ssh username@your-server.dreamhost.com
-
-# Or using custom key
-ssh -i ~/.ssh/id_ed25519_dreamhost username@your-server.dreamhost.com
-```
-
-If successful, you should be logged into the server without a password prompt.
-
-### 4. Add GitHub Secrets
-
-**Get your private key:**
-```bash
-# View the private key (copy manually)
-cat ~/.ssh/id_ed25519
-
-# Or copy directly to clipboard (macOS)
-cat ~/.ssh/id_ed25519 | pbcopy
-
-# If using custom filename
-cat ~/.ssh/id_ed25519_dreamhost | pbcopy
-```
-
-**Important:** Copy the **entire file contents**, including:
-- The `-----BEGIN OPENSSH PRIVATE KEY-----` line
-- All the base64-encoded content
-- The `-----END OPENSSH PRIVATE KEY-----` line
-- The trailing newline is normal and should be kept
-
-**In GitHub:**
-1. Go to your repository → Settings → Secrets and variables → Actions → New repository secret
-2. Add the following secrets:
-   - `SSH_PRIVATE_KEY`: Paste the **entire private key** from above (including BEGIN/END lines)
-   - `SERVER_IP`: Your Dreamhost server address (e.g., `your-server.dreamhost.com`)
-   - `SFTP_USERNAME`: Your Dreamhost username
-   - `SFTP_DESTINATION_PATH`: The destination path for files (e.g., `/home/username/derbynet.org`)
-
-### 5. Server Configuration for DerbyNet
-
-DerbyNet requires write access for:
-- **SQLite database** - `local/` directory (supports custom filenames)
-- **Photo uploads** - `photos/` directory with subdirectories for racer/car photos
-
-The deployment workflow (`.github/workflows/deploy.yml`) automatically creates these directories and sets proper permissions after each deployment.
-
-**Note:** The `local/` directory is excluded from deployment to preserve your production database.
-
-### 6. Deploy via GitHub Actions
-
-Once the secrets are configured, your GitHub Actions workflow will automatically:
-1. Build the DerbyNet application
-2. Deploy files to Dreamhost via SFTP
-3. Set up proper file permissions for SQLite and photos
-
-Push to the `main` branch to trigger deployment, or use the "Actions" tab in GitHub to manually trigger the workflow.
+For detailed instructions on configuring deployment, setting up SSH keys, and managing secrets, please see **[DREAMHOST.md](DREAMHOST.md)**.
 
 ## License
 
