@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main  # or your default branch
-      - feature/auto-deploy  # Add this temporarily for testing
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 # Cancel in-progress deployments when a new commit is pushed
@@ -16,9 +15,9 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      DEPLOY_PATH: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
+      DEPLOY_PATH: ${{ secrets.SFTP_DESTINATION_PATH }}
       # Set your public URL for mobile check-in QR codes (e.g., https://yourdomain.com/derbynet)
-      DERBYNET_URL: "https://richardwolff.me/derbynet"
+      DERBYNET_URL: ${{ secrets.DERBYNET_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
