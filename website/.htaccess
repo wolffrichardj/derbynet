@@ -1,0 +1,34 @@
+# DerbyNet - Apache Configuration for Dreamhost
+
+# Increase upload limits for photos and videos
+php_value upload_max_filesize 50M
+php_value post_max_size 50M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Force HTTPS (recommended for production)
+# Uncomment the following lines to enforce HTTPS
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Security headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Enable XSS protection
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^(config-.*\.inc|.*\.sqlite|.*\.db)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

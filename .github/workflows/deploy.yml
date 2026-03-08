@@ -1,0 +1,101 @@
+name: Build & Deploy DerbyNet to DreamHost
+
+on:
+  push:
+    branches:
+      - main  # or your default branch
+      - feature/auto-deploy  # Add this temporarily for testing
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+# Cancel in-progress deployments when a new commit is pushed
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_PATH: ${{ secrets.SFTP_DESTINATION_PATH }}/derbynet
+      # Set your public URL for mobile check-in QR codes (e.g., https://yourdomain.com/derbynet)
+      DERBYNET_URL: "https://richardwolff.me/derbynet"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Apache Ant and LibreOffice
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ant libreoffice
+
+      - name: Generate build files
+        run: ant generated
+
+      - name: Build browser timer interface
+        run: ant timer-in-browser
+        continue-on-error: true  # Optional, won't fail if timer build has issues
+
+      - name: Prepare deployment files
+        run: |
+          # Create a staging directory with website contents
+          # Copy website files, excluding local/ directory (configuration)
+          mkdir -p deploy
+          rsync -av --exclude='local' --exclude='.git' website/ deploy/
+
+      - name: SFTP Deploy to DreamHost
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          server: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          local_path: './deploy/*'
+          remote_path: ${{ env.DEPLOY_PATH }}
+          sftpArgs: '-o ConnectTimeout=5'
+
+
+      - name: Set File Permissions for SQLite and Photos
+        run: |
+          # Set up SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Run SSH command to set permissions
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              ${{ secrets.SFTP_USERNAME }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Create local directory for SQLite database if it doesn't exist
+            mkdir -p local
+            # 777 allows web server (different user) to write database files
+            chmod -R 777 local
+            
+            # Set custom URL for mobile check-in QR codes
+            echo "${{ env.DERBYNET_URL }}" > local/config-url
+            
+            # Create photo directories if they don't exist
+            mkdir -p photos/head
+            mkdir -p photos/car
+            mkdir -p photos/videos
+            
+            # Set permissions recursively for photo directories (web server needs write access)
+            # DerbyNet creates subdirectories for different photo renders (e.g., 200x200, cropped, etc.)
+            # 777 allows web server (different user) to write photo files
+            chmod -R 777 photos
+            
+            echo "Permissions set successfully"
+          EOF
+          
+          # Clean up SSH key
+          rm -f ~/.ssh/deploy_key
+
+
+

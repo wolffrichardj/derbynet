@@ -28,8 +28,14 @@
   </condition>
 
   <!-- Duplicated in docs/build.xml -->
-  <property name="soffice"
-	        location="/Applications/LibreOffice.app/Contents/MacOS/soffice"/>
+  <!-- Check for LibreOffice on different platforms -->
+  <condition property="soffice" value="/usr/bin/soffice">
+    <available file="/usr/bin/soffice"/>
+  </condition>
+  <condition property="soffice" value="/Applications/LibreOffice.app/Contents/MacOS/soffice">
+    <available file="/Applications/LibreOffice.app/Contents/MacOS/soffice"/>
+  </condition>
+  <property name="soffice" location="/Applications/LibreOffice.app/Contents/MacOS/soffice"/>
   <available property="soffice_available" file="${soffice}"/>
 
   <target name="clean" depends="docs-clean"
@@ -250,7 +256,10 @@
     </copy>
   </target>
 
-  <target name="quickref" depends="docs-dist">
+  <target name="quickref-check">
+      <available property="quickref.exists" file="docs/dist/Quick Reference.pdf"/>
+  </target>
+  <target name="quickref" depends="docs-dist,quickref-check" if="quickref.exists">
       <copy file="docs/dist/Quick Reference.pdf" tofile="website/quickref.pdf" overwrite="true"/>
   </target>
 
