@@ -1,0 +1,145 @@
+name: Upstream sync PR
+
+on:
+  schedule:
+    - cron: '23 6 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Discover upstream repository
+        id: repo
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const response = await github.rest.repos.get({ owner, repo });
+            const parent = response.data.parent?.full_name || '';
+            const isFork = !!response.data.fork && !!parent;
+
+            core.setOutput('is_fork', isFork ? 'true' : 'false');
+            core.setOutput('parent', parent);
+
+            if (!isFork) {
+              core.notice('Repository is not a fork or has no parent; skipping upstream sync check.');
+            } else {
+              core.notice(`Detected upstream repository: ${parent}`);
+            }
+
+      - name: Skip if not a fork
+        if: steps.repo.outputs.is_fork != 'true'
+        run: echo 'Nothing to do for non-fork repositories.'
+
+      - name: Configure git
+        if: steps.repo.outputs.is_fork == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Compare main with upstream/main
+        if: steps.repo.outputs.is_fork == 'true'
+        id: compare
+        run: |
+          set -euo pipefail
+          UPSTREAM_REPO='${{ steps.repo.outputs.parent }}'
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          git fetch --no-tags upstream main
+          git fetch --no-tags origin main
+
+          COUNTS=$(git rev-list --left-right --count origin/main...upstream/main)
+          ORIGIN_ONLY=$(echo "$COUNTS" | awk '{print $1}')
+          UPSTREAM_ONLY=$(echo "$COUNTS" | awk '{print $2}')
+
+          echo "origin_only=${ORIGIN_ONLY}" >> "$GITHUB_OUTPUT"
+          echo "upstream_only=${UPSTREAM_ONLY}" >> "$GITHUB_OUTPUT"
+
+          if [ "$UPSTREAM_ONLY" -eq 0 ]; then
+            echo "needs_sync=false" >> "$GITHUB_OUTPUT"
+            echo "Fork main is up-to-date with upstream main."
+          else
+            echo "needs_sync=true" >> "$GITHUB_OUTPUT"
+            echo "Fork main is behind upstream main by ${UPSTREAM_ONLY} commit(s)."
+          fi
+
+      - name: Prepare sync branch from upstream/main
+        if: steps.compare.outputs.needs_sync == 'true'
+        env:
+          SYNC_BRANCH: sync/upstream-main
+        run: |
+          set -euo pipefail
+          git checkout -B "$SYNC_BRANCH" upstream/main
+          git push --force-with-lease origin "$SYNC_BRANCH"
+
+      - name: Create or update sync PR
+        if: steps.compare.outputs.needs_sync == 'true'
+        uses: actions/github-script@v7
+        env:
+          SYNC_BRANCH: sync/upstream-main
+          COMMITS_BEHIND: ${{ steps.compare.outputs.upstream_only }}
+          UPSTREAM_REPO: ${{ steps.repo.outputs.parent }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const head = `${owner}:${process.env.SYNC_BRANCH}`;
+            const base = 'main';
+
+            const title = `chore: sync upstream main (${process.env.COMMITS_BEHIND} commits behind)`;
+            const body = [
+              'Automated upstream sync PR.',
+              '',
+              `- Upstream: \`${process.env.UPSTREAM_REPO}\``,
+              `- Branch: \`${process.env.SYNC_BRANCH}\``,
+              `- Status: fork main appears to be behind upstream/main by ${process.env.COMMITS_BEHIND} commit(s).`,
+              '',
+              '@jules merge latest from the origin fork'
+            ].join('\n');
+
+            const existing = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              head,
+              base
+            });
+
+            if (existing.data.length > 0) {
+              const pr = existing.data[0];
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                title,
+                body
+              });
+              core.notice(`Updated existing PR #${pr.number}`);
+            } else {
+              const pr = await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                head,
+                base,
+                body
+              });
+              core.notice(`Created PR #${pr.data.number}`);
+            }
+
+      - name: Summary
+        if: steps.repo.outputs.is_fork == 'true'
+        run: |
+          if [ "${{ steps.compare.outputs.needs_sync }}" = "true" ]; then
+            echo "Opened/updated sync PR from sync/upstream-main to main."
+          else
+            echo "No sync needed."
+          fi
