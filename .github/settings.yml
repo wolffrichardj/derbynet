@@ -1,0 +1,19 @@
+# Repository settings managed as code.
+# Intended for the GitHub Settings app (probot/settings).
+repository:
+  # Enforce squash-only merges at the repository level.
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
+
+branches:
+  - name: main
+    protection:
+      # Require PR-based merges, but do not require approvals.
+      required_pull_request_reviews:
+        required_approving_review_count: 0
+      required_status_checks: null
+      enforce_admins: false
+      restrictions: null
+      allow_force_pushes: false
+      allow_deletions: false
